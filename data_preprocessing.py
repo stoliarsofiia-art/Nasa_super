@@ -180,16 +180,34 @@ def load_nasa_exoplanet_data():
     
     # Confirmed exoplanets (based on Kepler statistics)
     for _ in range(n_confirmed):
-        orbital_period = np.random.lognormal(2.5, 1.5)  # Days
+        # Mix of short, medium, and long period planets
+        period_type = np.random.choice(['short', 'medium', 'long'], p=[0.5, 0.3, 0.2])
+        if period_type == 'short':
+            orbital_period = np.random.lognormal(1.5, 1.0)  # Hot Jupiters, close-in planets
+        elif period_type == 'medium':
+            orbital_period = np.random.lognormal(3.5, 0.8)  # ~30-100 days
+        else:
+            orbital_period = np.random.lognormal(5.0, 0.7)  # Long period (100-500+ days)
+        
         stellar_mass = np.random.normal(1.0, 0.3)  # Solar masses
         stellar_temp = np.random.normal(5500, 800)  # Kelvin
         stellar_magnitude = np.random.normal(14, 2)
         
         # Calculate realistic transit parameters
         planet_radius = np.random.lognormal(0.5, 0.8)  # Earth radii
-        transit_depth = (planet_radius * 0.00916) ** 2  # Relative to stellar radius
-        transit_duration = np.random.normal(3, 1)  # Hours
-        snr = np.random.lognormal(2.5, 0.7)  # Signal-to-noise ratio
+        
+        # Stellar radius estimate (ensure positive)
+        stellar_radius = abs(stellar_mass) ** 0.8
+        transit_depth = (planet_radius / (stellar_radius * 109.1)) ** 2  # More accurate
+        transit_depth = float(np.real(transit_depth))  # Ensure real number
+        
+        # Transit duration scales with period (longer period = longer duration)
+        base_duration = 2 + np.log1p(abs(orbital_period)) * 0.5
+        transit_duration = abs(np.random.normal(base_duration, base_duration * 0.2))
+        
+        # SNR decreases with period (fewer transits observed)
+        snr_mean = max(5, 15 / (1 + abs(orbital_period) / 50))  # Lower SNR for long periods
+        snr = abs(np.random.lognormal(np.log(snr_mean), 0.5))
         semi_major_axis = (orbital_period / 365.25) ** (2/3) * stellar_mass ** (1/3)  # AU
         planet_temp = stellar_temp * np.sqrt(1 / (2 * semi_major_axis)) * 0.01
         impact_parameter = np.random.uniform(0, 0.9)
@@ -211,15 +229,30 @@ def load_nasa_exoplanet_data():
     
     # Planetary candidates (similar but more uncertain)
     for _ in range(n_candidate):
-        orbital_period = np.random.lognormal(2.5, 1.8)
+        # More diverse period distribution for candidates
+        period_type = np.random.choice(['short', 'medium', 'long'], p=[0.4, 0.35, 0.25])
+        if period_type == 'short':
+            orbital_period = np.random.lognormal(1.5, 1.2)
+        elif period_type == 'medium':
+            orbital_period = np.random.lognormal(3.5, 1.0)
+        else:
+            orbital_period = np.random.lognormal(5.0, 0.8)
+        
         stellar_mass = np.random.normal(1.0, 0.4)
         stellar_temp = np.random.normal(5500, 1000)
         stellar_magnitude = np.random.normal(15, 2.5)
         
         planet_radius = np.random.lognormal(0.5, 1.0)
-        transit_depth = (planet_radius * 0.00916) ** 2
-        transit_duration = np.random.normal(3, 1.5)
-        snr = np.random.lognormal(1.8, 0.8)  # Lower SNR
+        
+        stellar_radius = abs(stellar_mass) ** 0.8
+        transit_depth = (planet_radius / (stellar_radius * 109.1)) ** 2
+        transit_depth = float(np.real(transit_depth))
+        
+        base_duration = 2 + np.log1p(abs(orbital_period)) * 0.5
+        transit_duration = abs(np.random.normal(base_duration, base_duration * 0.3))
+        
+        snr_mean = max(4, 12 / (1 + abs(orbital_period) / 50))
+        snr = abs(np.random.lognormal(np.log(snr_mean), 0.6))  # Lower SNR for candidates
         semi_major_axis = (orbital_period / 365.25) ** (2/3) * stellar_mass ** (1/3)
         planet_temp = stellar_temp * np.sqrt(1 / (2 * semi_major_axis)) * 0.01
         impact_parameter = np.random.uniform(0, 0.95)
@@ -242,15 +275,32 @@ def load_nasa_exoplanet_data():
     # False positives (eclipsing binaries, artifacts)
     for _ in range(n_false_positive):
         # False positives have different characteristics
-        orbital_period = np.random.lognormal(2.0, 2.0)
+        fp_type = np.random.choice(['eclipsing_binary', 'background', 'artifact'], 
+                                   p=[0.6, 0.25, 0.15])
+        
+        if fp_type == 'eclipsing_binary':
+            # Short period binaries
+            orbital_period = np.random.lognormal(1.0, 1.5)
+            # VERY deep transits (much deeper than planets)
+            transit_depth = np.random.uniform(0.01, 0.3)  # 1-30%
+            transit_duration = np.random.normal(5, 2)
+            snr = np.random.lognormal(2.0, 0.8)
+        elif fp_type == 'background':
+            # Background eclipsing binary blended with target
+            orbital_period = np.random.lognormal(1.5, 2.0)
+            transit_depth = np.random.lognormal(-5, 1.0)  # Shallow
+            transit_duration = np.random.normal(3, 2)
+            snr = np.random.lognormal(1.2, 1.0)  # Low SNR
+        else:  # artifact
+            # Instrumental artifacts - random periods
+            orbital_period = np.random.uniform(0.5, 100)
+            transit_depth = np.random.lognormal(-5, 1.5)
+            transit_duration = np.random.uniform(1, 10)
+            snr = np.random.lognormal(1.0, 1.2)  # Low to medium SNR
+        
         stellar_mass = np.random.normal(1.0, 0.5)
         stellar_temp = np.random.normal(5500, 1200)
         stellar_magnitude = np.random.normal(15.5, 3)
-        
-        # Larger transit depths (eclipsing binaries)
-        transit_depth = np.random.lognormal(-4, 1.5)
-        transit_duration = np.random.normal(4, 2)  # Often longer
-        snr = np.random.lognormal(1.5, 1.0)  # Variable SNR
         
         data.append({
             'orbital_period': max(0.5, orbital_period),

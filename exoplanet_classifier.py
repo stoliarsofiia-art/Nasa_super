@@ -142,19 +142,28 @@ class ExoplanetClassificationSystem:
         
         return self
     
-    def predict(self, input_features, return_uncertainty=True):
+    def predict(self, input_features, return_uncertainty=True, show_diagnostic=False):
         """
         Make prediction for new observation.
         
         Args:
             input_features: dict or DataFrame with features
             return_uncertainty: whether to include uncertainty estimates
+            show_diagnostic: whether to show diagnostic analysis
         
         Returns:
             dict with classification and properties
         """
         if not self.is_trained:
             raise ValueError("Model not trained. Call train() first or load_models().")
+        
+        # Show diagnostic if requested
+        if show_diagnostic:
+            from diagnostic_tool import analyze_observation
+            if isinstance(input_features, dict):
+                analyze_observation(input_features)
+            else:
+                analyze_observation(input_features.iloc[0].to_dict())
         
         # Convert input to DataFrame
         if isinstance(input_features, dict):
@@ -314,9 +323,9 @@ def interactive_terminal_interface():
                 'stellar_magnitude': stellar_magnitude
             }
             
-            # Make prediction
+            # Make prediction with diagnostic
             print("\nAnalyzing observation...")
-            result = system.predict(input_features, return_uncertainty=True)
+            result = system.predict(input_features, return_uncertainty=True, show_diagnostic=True)
             
             # Display results
             print("\n" + "="*70)
