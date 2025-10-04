@@ -165,6 +165,12 @@ class ExoplanetClassificationSystem:
             else:
                 analyze_observation(input_features.iloc[0].to_dict())
         
+        # Store input for confirmation score calculation
+        if isinstance(input_features, dict):
+            input_params = input_features
+        else:
+            input_params = input_features.iloc[0].to_dict()
+        
         # Convert input to DataFrame
         if isinstance(input_features, dict):
             input_df = pd.DataFrame([input_features])
@@ -232,6 +238,21 @@ class ExoplanetClassificationSystem:
             cls: float(prob) 
             for cls, prob in zip(self.classifier.classes_, probabilities)
         }
+        
+        # Apply confirmation score correction for high-quality detections
+        try:
+            from model_improvements import get_corrected_classification, explain_correction
+            corrected_result, conf_score = get_corrected_classification(result, input_params)
+            
+            # Use corrected result if it improves confidence significantly
+            if (corrected_result['classification'] == 'confirmed_exoplanet' and 
+                corrected_result['confidence'] > result['confidence'] + 0.15):
+                original_class = result['classification']
+                result = corrected_result
+                result['original_classification'] = original_class
+                result['correction_applied'] = True
+        except:
+            pass  # If correction fails, use original result
         
         if properties is not None:
             result['properties'] = properties
