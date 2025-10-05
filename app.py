@@ -11,18 +11,16 @@ import os
 app = Flask(__name__)
 
 # Enable CORS for your GitHub Pages site
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "https://martyniukaleksei.github.io",
-            "http://localhost:*",  # For local testing
-            "http://127.0.0.1:*"   # For local testing
-        ],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"],
-        "supports_credentials": False
-    }
-})
+CORS(app, 
+     origins=[
+         "https://martyniukaleksei.github.io",
+         "http://localhost:*",
+         "http://127.0.0.1:*"
+     ],
+     methods=["GET", "POST", "OPTIONS"],
+     allow_headers=["Content-Type", "Accept"],
+     supports_credentials=False,
+     max_age=3600)
 
 # Load the model once when server starts
 print("Loading exoplanet classification model...")
@@ -53,10 +51,27 @@ def health():
     })
 
 
-@app.route('/predict', methods=['POST'])
+@app.route('/analyze', methods=['POST', 'OPTIONS'])
+def analyze():
+    """Handle preflight OPTIONS request"""
+    if request.method == 'OPTIONS':
+        return '', 204
+    
+    return predict_exoplanet()
+
+
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict():
+    """Handle preflight OPTIONS request"""
+    if request.method == 'OPTIONS':
+        return '', 204
+    
+    return predict_exoplanet()
+
+
+def predict_exoplanet():
     """
-    Prediction endpoint
+    Main prediction function used by both /analyze and /predict endpoints
     
     Expects JSON:
     {
