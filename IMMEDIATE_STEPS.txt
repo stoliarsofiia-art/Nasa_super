@@ -1,0 +1,95 @@
+================================================================
+IMMEDIATE STEPS TO FIX YOUR APP
+================================================================
+
+Your app is returning 404/503 because it's not running properly.
+
+RUN THESE COMMANDS NOW:
+------------------------
+
+1. Connect to your Heroku app:
+   heroku git:remote -a sophia-nasa-ml-app
+
+2. Deploy everything:
+   bash deploy_with_models.sh
+
+   OR manually:
+   git add -f models/
+   git add *.py Procfile requirements.txt runtime.txt
+   git commit -m "Deploy ML API"
+   git push heroku HEAD:main -f
+   heroku ps:scale web=1 -a sophia-nasa-ml-app
+
+3. Watch logs (wait for "Model loaded successfully!"):
+   heroku logs --tail -a sophia-nasa-ml-app
+
+4. When logs show success, test health endpoint:
+   curl https://sophia-nasa-ml-app-7bc530f3ab97.herokuapp.com/health
+
+5. Then test your website:
+   https://martyniukaleksei.github.io/iaso-som-v1/
+
+================================================================
+WHAT TO LOOK FOR IN LOGS:
+================================================================
+
+✅ GOOD:
+  - "Loading exoplanet classification model..."
+  - "Models loaded from models/"  
+  - "Model loaded successfully!"
+  - "State changed from starting to up"
+
+❌ BAD:
+  - "ModuleNotFoundError"
+  - "FileNotFoundError: models not found"
+  - "Error R14" (memory)
+  - "crashed"
+
+================================================================
+IF YOU SEE ERRORS:
+================================================================
+
+Error: "models not found"
+Fix: Make sure models/ is included:
+  git add -f models/
+  git commit -m "Add models"
+  git push heroku HEAD:main
+
+Error: "No module named 'flask'"
+Fix: requirements.txt not installed properly:
+  git push heroku HEAD:main -f
+
+Error: "Memory quota exceeded"
+Fix: Upgrade dyno:
+  heroku ps:type hobby -a sophia-nasa-ml-app
+
+================================================================
+QUICK TEST COMMANDS:
+================================================================
+
+Check app status:
+  heroku ps -a sophia-nasa-ml-app
+
+Check what's deployed:
+  heroku run ls -la models/ -a sophia-nasa-ml-app
+
+Restart app:
+  heroku restart -a sophia-nasa-ml-app
+
+View live logs:
+  heroku logs --tail -a sophia-nasa-ml-app
+
+================================================================
+YOUR ENDPOINTS AFTER DEPLOYMENT:
+================================================================
+
+Health check:
+  GET https://sophia-nasa-ml-app-7bc530f3ab97.herokuapp.com/health
+
+Analyze (your website uses this):
+  POST https://sophia-nasa-ml-app-7bc530f3ab97.herokuapp.com/analyze
+
+Predict (alternative):
+  POST https://sophia-nasa-ml-app-7bc530f3ab97.herokuapp.com/predict
+
+================================================================
