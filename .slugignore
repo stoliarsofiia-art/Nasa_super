@@ -1,0 +1,7 @@
+*.csv
+models/
+*.pkl
+__pycache__/
+.venv/
+*.pyc
+.ipynb_checkpoints/
