@@ -33,10 +33,10 @@ def get_real_confirmed_exoplanets():
         # Add more realistic planets across period range
     ]
     
-    # Add 90 more planets with realistic parameter distributions
+    # Add 990 more planets with realistic parameter distributions
     np.random.seed(42)
     
-    for i in range(90):
+    for i in range(990):
         # Diverse period distribution
         period_category = np.random.choice(['ultra_short', 'short', 'medium', 'long'], 
                                           p=[0.15, 0.35, 0.30, 0.20])
@@ -100,7 +100,7 @@ def create_training_dataset_with_real_exoplanets():
     Create complete training dataset with real confirmed exoplanets.
     """
     print("="*70)
-    print("TRAINING WITH 100 REAL CONFIRMED EXOPLANETS")
+    print("TRAINING WITH 1000 CONFIRMED EXOPLANETS")
     print("="*70)
     
     # Get confirmed exoplanets
@@ -137,7 +137,7 @@ def create_training_dataset_with_real_exoplanets():
     # Create clear false positives (eclipsing binaries)
     print("\nCreating FALSE POSITIVES (eclipsing binaries)...")
     np.random.seed(42)
-    n_fp = 40
+    n_fp = 300
     
     false_positives = []
     for i in range(n_fp):
@@ -172,7 +172,7 @@ def create_training_dataset_with_real_exoplanets():
     
     # Create planetary candidates (uncertain cases)
     print("\nCreating PLANETARY CANDIDATES...")
-    n_cand = 40
+    n_cand = 200
     
     candidates = []
     for i in range(n_cand):
