@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CORS - Exoplanet Classifier</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+        .classification {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .confidence {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        .properties {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .property {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .property-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .property-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .error {
+            color: #dc3545;
+            background: #ffe6e6;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #dc3545;
+        }
+        .api-url {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔭 Exoplanet Classifier</h1>
+        
+        <div class="api-url">
+            <strong>API URL:</strong> <span id="apiUrl">https://your-app-name.herokuapp.com</span>
+        </div>
+        
+        <form id="predictForm">
+            <div class="form-group">
+                <label for="orbital_period">Orbital Period (days)</label>
+                <input type="number" step="any" id="orbital_period" name="orbital_period" value="289.9" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="transit_duration">Transit Duration (hours)</label>
+                <input type="number" step="any" id="transit_duration" name="transit_duration" value="7.4" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="transit_depth">Transit Depth (relative)</label>
+                <input type="number" step="any" id="transit_depth" name="transit_depth" value="0.00492" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="snr">Signal-to-Noise Ratio (SNR)</label>
+                <input type="number" step="any" id="snr" name="snr" value="12" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="stellar_mass">Stellar Mass (solar masses)</label>
+                <input type="number" step="any" id="stellar_mass" name="stellar_mass" value="0.97" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="stellar_temp">Stellar Temperature (K)</label>
+                <input type="number" step="any" id="stellar_temp" name="stellar_temp" value="5627" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="stellar_magnitude">Stellar Magnitude</label>
+                <input type="number" step="any" id="stellar_magnitude" name="stellar_magnitude" value="11.7" required>
+            </div>
+            
+            <button type="submit">🚀 Classify Exoplanet</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // UPDATE THIS WITH YOUR HEROKU APP URL
+        const API_URL = 'https://your-app-name.herokuapp.com/predict';
+        
+        document.getElementById('apiUrl').textContent = API_URL;
+        
+        document.getElementById('predictForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result show loading';
+            resultDiv.innerHTML = '⏳ Analyzing exoplanet data...';
+            
+            // Get form data
+            const formData = new FormData(e.target);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = parseFloat(value);
+            });
+            
+            try {
+                console.log('Sending request to:', API_URL);
+                console.log('Data:', data);
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Result:', result);
+                
+                if (result.status === 'success') {
+                    let html = `
+                        <div class="classification">
+                            ${result.classification.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                        <div class="confidence">
+                            Confidence: ${(result.confidence * 100).toFixed(2)}%
+                        </div>
+                    `;
+                    
+                    if (result.properties) {
+                        html += `
+                            <h3 style="margin-top: 20px; color: #333;">Planet Properties</h3>
+                            <div class="properties">
+                                <div class="property">
+                                    <div class="property-label">Planet Radius</div>
+                                    <div class="property-value">${result.properties.planet_radius.toFixed(4)} R⊕</div>
+                                </div>
+                                <div class="property">
+                                    <div class="property-label">Planet Temperature</div>
+                                    <div class="property-value">${result.properties.planet_temp.toFixed(2)} K</div>
+                                </div>
+                                <div class="property">
+                                    <div class="property-label">Semi-major Axis</div>
+                                    <div class="property-value">${result.properties.semi_major_axis.toFixed(4)} AU</div>
+                                </div>
+                                <div class="property">
+                                    <div class="property-label">Impact Parameter</div>
+                                    <div class="property-value">${result.properties.impact_parameter.toFixed(4)}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `
+                        <details style="margin-top: 20px;">
+                            <summary style="cursor: pointer; color: #667eea; font-weight: 600;">Show Class Probabilities</summary>
+                            <div style="margin-top: 10px;">
+                                ${Object.entries(result.class_probabilities).map(([cls, prob]) => `
+                                    <div style="margin: 5px 0;">
+                                        <strong>${cls.replace(/_/g, ' ')}:</strong> ${(prob * 100).toFixed(2)}%
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </details>
+                    `;
+                    
+                    resultDiv.className = 'result show';
+                    resultDiv.innerHTML = html;
+                } else {
+                    throw new Error(result.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result show error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Error:</strong><br>
+                    ${error.message}<br><br>
+                    <small>Check the browser console for more details.</small>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -9,7 +9,20 @@ from exoplanet_classifier import ExoplanetClassificationSystem
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for cross-origin requests
+
+# Enable CORS for your GitHub Pages site
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://martyniukaleksei.github.io",
+            "http://localhost:*",  # For local testing
+            "http://127.0.0.1:*"   # For local testing
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"],
+        "supports_credentials": False
+    }
+})
 
 # Load the model once when server starts
 print("Loading exoplanet classification model...")
