@@ -142,14 +142,20 @@ def predict_exoplanet():
             }
         }
         
-        # Add planet properties if available
-        if 'properties' in result:
-            response['properties'] = {
-                'planet_radius': float(result['properties']['planet_radius']),
-                'planet_temp': float(result['properties']['planet_temp']),
-                'semi_major_axis': float(result['properties']['semi_major_axis']),
-                'impact_parameter': float(result['properties']['impact_parameter'])
-            }
+        # Add planet properties ONLY if they exist and classification is planet-related
+        if 'properties' in result and result['properties'] is not None:
+            # Only return properties for confirmed exoplanets and candidates
+            if result['classification'] in ['confirmed_exoplanet', 'planetary_candidate']:
+                response['properties'] = {
+                    'planet_radius': float(result['properties']['planet_radius']),
+                    'planet_temp': float(result['properties']['planet_temp']),
+                    'semi_major_axis': float(result['properties']['semi_major_axis']),
+                    'impact_parameter': float(result['properties']['impact_parameter'])
+                }
+            # For false positives, explicitly set properties to null
+            else:
+                response['properties'] = None
+                response['message'] = 'No planetary properties - classified as false positive'
         
         # Add uncertainty if available
         if 'uncertainty' in result:

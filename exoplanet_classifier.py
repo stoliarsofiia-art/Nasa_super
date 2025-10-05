@@ -201,27 +201,32 @@ class ExoplanetClassificationSystem:
             confidence = np.max(probabilities)
             uncertainty = None
         
-        # Property prediction
+        # Property prediction - ONLY for confirmed exoplanets and candidates
         properties = None
         property_uncertainties = None
         
+        # Only predict properties for planets, NOT for false positives
         if classification == 'confirmed_exoplanet' or classification == 'planetary_candidate':
-            props_pred, props_uncert = self.regressors.predict_with_uncertainty(X_engineered)
-            
-            properties = {
-                'planet_radius': float(props_pred['planet_radius'][0]),
-                'planet_temp': float(props_pred['planet_temp'][0]),
-                'semi_major_axis': float(props_pred['semi_major_axis'][0]),
-                'impact_parameter': float(props_pred['impact_parameter'][0])
-            }
-            
-            if return_uncertainty:
-                property_uncertainties = {
-                    'planet_radius': float(props_uncert['planet_radius'][0]),
-                    'planet_temp': float(props_uncert['planet_temp'][0]),
-                    'semi_major_axis': float(props_uncert['semi_major_axis'][0]),
-                    'impact_parameter': float(props_uncert['impact_parameter'][0])
+            try:
+                props_pred, props_uncert = self.regressors.predict_with_uncertainty(X_engineered)
+                
+                properties = {
+                    'planet_radius': float(props_pred['planet_radius'][0]),
+                    'planet_temp': float(props_pred['planet_temp'][0]),
+                    'semi_major_axis': float(props_pred['semi_major_axis'][0]),
+                    'impact_parameter': float(props_pred['impact_parameter'][0])
                 }
+                
+                if return_uncertainty:
+                    property_uncertainties = {
+                        'planet_radius': float(props_uncert['planet_radius'][0]),
+                        'planet_temp': float(props_uncert['planet_temp'][0]),
+                        'semi_major_axis': float(props_uncert['semi_major_axis'][0]),
+                        'impact_parameter': float(props_uncert['impact_parameter'][0])
+                    }
+            except Exception as e:
+                print(f"Warning: Could not predict properties: {e}")
+                properties = None
         
         # Build result dictionary
         result = {
