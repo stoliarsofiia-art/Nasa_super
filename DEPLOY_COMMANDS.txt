@@ -1,0 +1,35 @@
+================================================================================
+HEROKU DEPLOYMENT COMMANDS
+================================================================================
+
+OPTION 1: AUTOMATED SCRIPT (RECOMMENDED)
+----------------------------------------
+bash deploy_to_heroku.sh
+
+This script will:
+✓ Initialize git
+✓ Add files
+✓ Commit changes  
+✓ Check Heroku login
+✓ Push to Heroku
+
+================================================================================
+
+OPTION 2: MANUAL STEP-BY-STEP
+------------------------------
+
+Step 1: Login to Heroku
+------------------------
+heroku login
+
+Step 2: Initialize Git (if not already done)
+---------------------------------------------
+git init
+
+Step 3: Create .gitignore
+--------------------------
+cat > .gitignore << 'EOF'
+__pycache__/
+*.pyc
+.env
+venv/
