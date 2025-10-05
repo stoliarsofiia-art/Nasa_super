@@ -244,14 +244,20 @@ class ExoplanetClassificationSystem:
             for cls, prob in zip(self.classifier.classes_, probabilities)
         }
         
-        # Apply confirmation score correction for high-quality detections
+        # Apply confirmation score correction ONLY for borderline cases
+        # Don't override clear false positives!
         try:
-            from model_improvements import get_corrected_classification, explain_correction
+            from model_improvements import get_corrected_classification
             corrected_result, conf_score = get_corrected_classification(result, input_params)
             
-            # Use corrected result if it improves confidence significantly
+            # Only use correction if:
+            # 1. Original was NOT false_positive with high confidence
+            # 2. Correction significantly improves confidence
+            original_fp_confidence = result['class_probabilities'].get('false_positive', 0)
+            
             if (corrected_result['classification'] == 'confirmed_exoplanet' and 
-                corrected_result['confidence'] > result['confidence'] + 0.15):
+                corrected_result['confidence'] > result['confidence'] + 0.15 and
+                original_fp_confidence < 0.6):  # Don't override clear false positives
                 original_class = result['classification']
                 result = corrected_result
                 result['original_classification'] = original_class
