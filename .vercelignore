@@ -1,0 +1,61 @@
+# Training data and large datasets
+*.csv
+nasa_training_data.csv
+real_exoplanet_training_data.csv
+
+# Documentation and markdown files
+*.md
+!README.md
+
+# Test files
+test_*.py
+*_test.py
+test_*.html
+
+# Scripts and tools
+*.sh
+diagnostic_tool.py
+quick_demo.py
+mmnk.py
+
+# Validation and status files
+*.txt
+DEPLOY_COMMANDS.txt
+DEPLOYMENT_CHECKLIST.txt
+CORRECTION_VALIDATION.txt
+FINAL_STATUS.txt
+FINAL_SUMMARY.txt
+SYSTEM_STATUS.txt
+TEST_CASE.txt
+TRAINED_1000_EXOPLANETS.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Heroku specific
+Procfile
+deploy_to_heroku.sh
+.slugignore
+
+# Model validation and improvement scripts
+model_validation.py
+model_improvements.py
