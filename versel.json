@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/exoplanet_classifier.py"
+      "dest": "/app.py"
     }
   ]
 }
